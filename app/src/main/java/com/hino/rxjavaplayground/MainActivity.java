@@ -38,6 +38,16 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        // avoid memory leaks by cleaning up the observer
+        if (disposableObserver != null && !disposableObserver.isDisposed()) {
+            disposableObserver.dispose();
+        }
+    }
+
     @OnClick(R.id.subscribeButton)
     public void onButtonClick() {
         new Thread(() -> createNewDisposableObserver()).start();
@@ -70,6 +80,9 @@ public class MainActivity extends AppCompatActivity {
                             // onComplete() will NOT be called if you dispose
                             Timber.i("Completed with sum: %d", sum);
                             textView.setText(String.format("%d", sum));
+
+                            // once completed dispose the observer
+                            dispose();
                         }
                     }
                 );
@@ -78,7 +91,7 @@ public class MainActivity extends AppCompatActivity {
     @OnClick(R.id.unsubscribeButton)
     public void onUnsubscribeClick() {
         Timber.i("You have un-subscribed!!!");
-        if (disposableObserver != null) {
+        if (disposableObserver != null && !disposableObserver.isDisposed()) {
             disposableObserver.dispose();
         }
         textView.setText(String.format("%d", sum));
